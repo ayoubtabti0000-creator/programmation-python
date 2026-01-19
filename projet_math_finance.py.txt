@@ -1,0 +1,152 @@
+"""
+Projet : Analyse financière avec Python
+Matière : Mathématiques appliquées
+Réalisé par : Ayoub
+Outils : Python, Streamlit, Pandas, Numpy, Matplotlib, Scipy
+Objectif :
+- Analyse statistique des rendements
+- Test de normalité (Jarque-Bera)
+- Indicateurs techniques (SMA, RSI)
+- Backtesting d’une stratégie financière
+"""
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# ===============================
+# 1. Génération des données (synthetic)
+# ===============================
+np.random.seed(42)
+
+dates = pd.date_range(start="2023-01-01", periods=250, freq="D")
+
+price = 100 * np.cumprod(1 + np.random.normal(0.0005, 0.01, len(dates)))
+
+data = pd.DataFrame({
+    "Open": price * (1 + np.random.normal(0, 0.002, len(price))),
+    "High": price * (1 + np.random.normal(0.01, 0.002, len(price))),
+    "Low": price * (1 - np.random.normal(0.01, 0.002, len(price))),
+    "Close": price,
+    "Volume": np.random.randint(1000, 5000, len(price))
+}, index=dates)
+
+# ===============================
+# 2. Streamlit Interface
+# ===============================
+st.title(" Plateforme d’analyse financière")
+st.write("Projet de mathématiques appliquées à la finance")
+
+st.sidebar.header("⚙ Paramètres")
+capital_initial = st.sidebar.number_input("Capital initial", value=1000)
+
+# ===============================
+# 3. Affichage des données
+# ===============================
+st.subheader(" Données OHLC")
+st.dataframe(data.head())
+
+# ===============================
+# 4. Calcul des rendements
+# ===============================
+data["Rendement_simple"] = data["Close"].pct_change()
+data["Rendement_log"] = np.log(data["Close"] / data["Close"].shift(1))
+
+# ===============================
+# 5. Statistiques descriptives
+# ===============================
+returns = data["Rendement_simple"].dropna()
+
+stats_df = pd.DataFrame({
+    "Moyenne": [returns.mean()],
+    "Médiane": [returns.median()],
+    "Variance": [returns.var()],
+    "Volatilité": [returns.std()],
+    "Skewness": [returns.skew()],
+    "Kurtosis": [returns.kurtosis()],
+    "Min": [returns.min()],
+    "Max": [returns.max()]
+})
+
+st.subheader("Statistiques des rendements")
+st.dataframe(stats_df)
+
+# Test de normalité
+jb_stat, jb_pvalue = stats.jarque_bera(returns)
+st.write(f" Test de Jarque-Bera : p-value = {jb_pvalue:.4f}")
+
+if jb_pvalue < 0.05:
+    st.error(" Les rendements ne suivent pas une loi normale")
+else:
+    st.success(" Les rendements suivent une loi normale")
+
+# ===============================
+# 6. Indicateurs techniques
+# ===============================
+data["SMA20"] = data["Close"].rolling(20).mean()
+data["SMA50"] = data["Close"].rolling(50).mean()
+
+# RSI
+delta = data["Close"].diff()
+gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+rs = gain / loss
+data["RSI"] = 100 - (100 / (1 + rs))
+
+# ===============================
+# 7. Backtesting stratégie SMA
+# ===============================
+data["Position"] = 0
+data.loc[data["SMA20"] > data["SMA50"], "Position"] = 1
+
+data["Rendement_strategie"] = data["Position"].shift(1) * data["Rendement_simple"]
+data["Rendement_strategie"].fillna(0, inplace=True)
+
+data["Capital"] = capital_initial * (1 + data["Rendement_strategie"]).cumprod()
+
+# Métriques de performance
+rendement_total = (data["Capital"].iloc[-1] - capital_initial) / capital_initial
+vol_annuelle = data["Rendement_strategie"].std() * np.sqrt(252)
+sharpe = (data["Rendement_strategie"].mean() / data["Rendement_strategie"].std()) * np.sqrt(252)
+
+max_drawdown = (data["Capital"] / data["Capital"].cummax() - 1).min()
+
+perf_df = pd.DataFrame({
+    "Rendement total": [rendement_total],
+    "Volatilité annuelle": [vol_annuelle],
+    "Ratio de Sharpe": [sharpe],
+    "Max Drawdown": [max_drawdown]
+})
+
+st.subheader(" Performance de la stratégie")
+st.dataframe(perf_df)
+
+# ===============================
+# 8. Visualisations
+# ===============================
+st.subheader(" Prix & Moyennes mobiles")
+fig1, ax1 = plt.subplots()
+ax1.plot(data.index, data["Close"], label="Prix")
+ax1.plot(data.index, data["SMA20"], label="SMA20")
+ax1.plot(data.index, data["SMA50"], label="SMA50")
+ax1.legend()
+st.pyplot(fig1)
+
+st.subheader(" Histogramme des rendements")
+fig2, ax2 = plt.subplots()
+ax2.hist(returns, bins=30)
+st.pyplot(fig2)
+
+st.subheader(" Évolution du capital")
+fig3, ax3 = plt.subplots()
+ax3.plot(data.index, data["Capital"])
+ax3.set_ylabel("Capital")
+st.pyplot(fig3)
+
+st.subheader(" RSI")
+fig4, ax4 = plt.subplots()
+ax4.plot(data.index, data["RSI"])
+ax4.axhline(70, linestyle="--")
+ax4.axhline(30, linestyle="--")
+st.pyplot(fig4)
