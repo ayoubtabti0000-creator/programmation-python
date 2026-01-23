@@ -1,0 +1,99 @@
+disp="disponible"
+emp="emprunte"
+class Membre:
+    def __init__(self,np,code):
+        self.nomprenom=np
+        self.code=code
+        self.list_livres=[ ]
+    def emprunter_livre(self,livre):
+        if livre.statut== disp:
+            self.list_livres.append(livre)
+            livre.emprunter()
+            print(f"Le memebre {self.nomprenom} a emprunté {livre.titre}")
+        else:
+            print(f"impossible d'emprunter le livre {livre.titre} il est déjà emprunté")
+    def retourner_livre(self,livre):
+        if livre in self.list_livres:
+            if livre.statut==emp:
+                self.list_livres.remove(livre)
+                livre.retourner()
+            else:
+                print("Le livre n'a pas été emprunter pour le retourner")
+        else:
+            print("ce membre n'a jamais emprunté ce livre")
+
+    def afficher_infos(self):
+        print(f"Membre : {self.nomprenom} ")
+        for livre in self.list_livres:
+            livre.afficher_infos()
+def afficher_menu():
+    print(10*"-","Menu",10*"-")
+    print("1-Emprunter un livre.")
+    print("2-Retourner un livre.")
+    print("3-Afficher les informations du membre.")
+    print("4-Changer d’utilisateur.")
+    print("5-Quitter.")
+    print(20*"-")
+
+
+
+def identification(membres):
+    while True:
+        code = int(input("Donnez votre code : ")) #1234
+        if code in membres :
+            print("Bienvenue", membres[code].nomprenom)
+            return membres[code]
+
+        else:
+            print("Code incorrecte ")
+
+
+class Livre:
+
+
+
+    def main(Livre):
+        livre1 = Livre('antigone', "richard")
+        livre2 = Livre('la boite', "ahmed")
+
+        membre1 = Membre("test",1234)
+        membre2 = Membre("test2",9876)
+        membre3 = Membre("test3",4572)
+        membres = {membre1.code : membre1 ,
+                   membre2.code : membre2,
+                   membre3.code: membre3
+                   }
+
+        livres={1:livre1,
+                2:livre2}
+        membre_actuel=identification(membres)
+
+        while True:
+            afficher_menu()
+            choix = int(input("Merci de choisir une opération : "))
+            if choix ==1:
+                for cle ,livre in livres.items():
+                    print(cle , "-",livre.titre,"par", livre.auteur, "Statut : ", livre.statut )
+                livre_choisi=int(input("Merci de choisir le livre a emprunté : "))
+                if 0<livre_choisi<=len(livres):
+                    membre_actuel.emprunter_livre(livres[livre_choisi])
+                else:
+                    print("Merci de choisir un livre parmis la liste affichée ci-dessus")
+            elif choix ==2:
+                for cle, livre in livres.items():
+                    print(cle, "-", livre.titre, "par", livre.auteur, "Statut : ", livre.statut)
+                livre_choisi = int(input("Merci de choisir le livre a emprunté : "))
+                if 0<livre_choisi<=len(livres):
+                    membre_actuel.retourner_livre(livres[livre_choisi])
+                else:
+                    print("Merci de choisir un livre parmis la liste affichée ci-dessus")
+            elif choix ==3:
+                print("code : ",membre_actuel.code)
+                membre_actuel.afficher_infos()
+            elif choix ==4:
+                membre_actuel=identification(membres)
+            elif choix ==5:
+                print("Merci pour votre visite")
+                break
+            else:
+                print("Choix invalide")
