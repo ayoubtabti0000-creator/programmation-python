@@ -1,0 +1,12 @@
+inventaire = {
+    "pomme": 1.0,
+    "banane": 0.5,
+    "orange": 1.2
+}
+article = input("Entrez le nom de l'article : ")
+if article in inventaire:
+    print("Prix de", article, ":", inventaire[article])
+else:
+    print("Non trouvé")
+prix = inventaire.get(article, "Non trouvé")
+print(prix)
