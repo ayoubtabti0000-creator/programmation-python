@@ -1,0 +1,5 @@
+inventaire = {"pomme": 1.0,
+"banane": 0.5, "orange": 1.2}
+for  articles,prix in inventaire.items():
+    if prix > 0.7 :
+        print(articles,":",prix)
