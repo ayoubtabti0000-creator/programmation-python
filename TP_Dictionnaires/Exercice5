@@ -1,0 +1,9 @@
+employes = {
+    "Informatique": ["Ali", "Sara", "Youssef"],
+    "RH": ["Amina", "Karim"],
+    "Finance": ["Omar", "Nadia"]
+}
+employes["Informatique"].append("ayoub")
+employes["Informatique"].append("younnes")
+for emp in employes["Informatique"]:
+    print(emp)
