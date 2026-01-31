@@ -1,0 +1,5 @@
+
+etudiant = { "nom": "Alice", "age":20 ,"notes": [14, 16, 18]}
+print(etudiant["nom"])
+print(etudiant["notes"][1])
+
